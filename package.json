@@ -1,0 +1,25 @@
+{
+  "name": "my-node-cli",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cli.js",
+  "bin": "cli.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hu-ke/my-node-cli.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hu-ke/my-node-cli/issues"
+  },
+  "homepage": "https://github.com/hu-ke/my-node-cli#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^3.0.3",
+    "ejs": "^3.1.9"
+  }
+}
