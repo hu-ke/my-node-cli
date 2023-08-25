@@ -1,62 +1,58 @@
 #! /usr/bin/env node
-import { input } from '@inquirer/prompts'; // inquirer命令行询问用户问题，记录回答结果
+import { input, confirm } from '@inquirer/prompts'; // inquirer命令行询问用户问题，记录回答结果
+import {printLogo, writePackageJson, generateProjFiles, isFolderExists, removeDir} from './utils/index.js'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url';
+import { red, lightCyan, green } from 'kolorist'
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
-import fsPromises from 'node:fs/promises';
-import ejs from 'ejs'
-// import { program } from 'commander' // commander用于命令行自定义指令
+import { program } from 'commander' // commander用于命令行自定义指令
+printLogo()
 
-// program
-// .version('0.1.0')
-// .command('create <name>')
-// .description('create a new project')
-// .action(name => { 
-//     // 打印命令行输入的值
-//     console.log("project name is " + name)
-// })
+program
+    .name('my-node-cli')
+    .description('This is the CLI to help creating a starblink fe project instantly.')
+    .version('0.0.1')
 
-// program.parse()
-
-// const answers = {
-//     name: await input({ message: 'Enter your name' }),
-//     age: await input({ message: 'and your age'})
-// }
-// const destUrl = path.join(__dirname, 'templates')
-// const cwdUrl = process.cwd()
-// console.log('destUrl', destUrl, 'cwdUrl', cwdUrl)
-// // 从模版目录中读取文件
-// fs.readdir(destUrl, (err, files) => {
-//     if (err) throw err;
-//     files.forEach((file) => {
-//       // 使用 ejs 渲染对应的模版文件
-//       // renderFile（模版文件地址，传入渲染数据）
-//       ejs.renderFile(path.join(destUrl, file), answers).then(data => {
-//         // 生成 ejs 处理后的模版文件
-//         fs.writeFileSync(path.join(cwdUrl, file) , data)
-//       })
-//     })
-// })
-
-const targetFileOrFolderUrl = path.join(__dirname, 'templates', 'wisepick-fe')
-const outputDirUrl = path.join(__dirname, 'generated')
-
-async function generate(targetFileOrFolderUrl, outputDirUrl, fileOrFolderName) {
-    // 是文件夹
-    if ((await fsPromises.stat(targetFileOrFolderUrl)).isDirectory()) {
-        // 在输出目录下创建文件夹
-        await fsPromises.mkdir(path.join(outputDirUrl, fileOrFolderName))
-        // 将目标文件夹下的文件/文件夹 写到 输出目录
-        let list = await fsPromises.readdir(targetFileOrFolderUrl)
-        for (let name of list) {
-            generate(path.join(targetFileOrFolderUrl, name), path.join(outputDirUrl, fileOrFolderName), name)
+// 创建工程
+program
+    .command('create <name>')
+    .description('create a new project')
+    .action(async name => {
+        let shouldContinue = true
+        let alreadyExists = isFolderExists(path.join(__dirname, 'generated', name))
+        // 名为name的工程已经存在
+        if (alreadyExists) {
+            shouldContinue = await confirm({
+                message: `${lightCyan(`你输入的 "${name}" 文件夹不为空，是否清空当前${name}并且继续`)}`
+            })
         }
-    } else {
-        console.log('targetFileOrFolderUrl', targetFileOrFolderUrl)
-        // 普通文件，直接写
-        let result = await fsPromises.readFile(targetFileOrFolderUrl, 'utf-8')
-        fsPromises.writeFile(path.join(outputDirUrl, fileOrFolderName), result)
-    }
-}
+        if (!shouldContinue) {
+            console.log(`${red('✖ 操作取消')}`)
+            return
+        }
+        // 用户输入
+        const answers = {
+            name,
+            description: await input({ message: '请输入项目描述（Please enter project description）：'})
+        }
+        // 模板路径
+        const targetFileOrFolderUrl = path.join(__dirname, 'templates', 'wisepick-fe')
+        // 输出脚手架路径
+        const outputDirUrl = path.join(__dirname, 'generated')
+        // 生成脚手架之前删除已有的同名脚手架
+        if (alreadyExists) {
+            await removeDir(path.join(__dirname, 'generated', name))
+        }
+        // 生成脚手架
+        await generateProjFiles(targetFileOrFolderUrl, outputDirUrl, answers.name)
+        // 生成脚手架的package.json文件
+        const packageJsonUrl = path.join(__dirname, 'generated', answers.name, 'package.json')
+        await writePackageJson(
+            packageJsonUrl,
+            answers
+        )
+        console.log(green(`工程 ${name} 创建成功.`))
+    })
 
-generate(targetFileOrFolderUrl, outputDirUrl, 'wisepick-fe')
+program.parse()

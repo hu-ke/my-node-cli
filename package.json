@@ -1,7 +1,7 @@
 {
   "name": "my-node-cli",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "cli.js",
   "bin": "cli.js",
@@ -21,6 +21,8 @@
   "dependencies": {
     "@inquirer/prompts": "^3.0.3",
     "commander": "^11.0.0",
-    "ejs": "^3.1.9"
+    "ejs": "^3.1.9",
+    "figlet": "^1.6.0",
+    "kolorist": "^1.8.0"
   }
 }
