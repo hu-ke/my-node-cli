@@ -41,16 +41,38 @@ const {ast} = babel.transformSync(code, {
   plugins: ["@babel/plugin-syntax-typescript"]
 })
 traverse.default(ast, {
+  // 当遍历到 import 语句相关的节点会执行这个方法
+  // ImportDeclaration(path) {
+  //   const prevNode = path.getPrevSibling().node
+  //   console.log('prev', prevNode)
+  //   // 判断当前这个 import 语句是不是第一个
+  //   if ((!prevNode || prevNode.type !== 'ImportDeclaration')) {
+  //     // 需要插入的节点
+  //     const node = t.importDeclaration(
+  //       [t.importDefaultSpecifier(t.identifier('A'))],
+  //       t.stringLiteral('a')
+  //     )
+  //     path.insertBefore(node)
+  //   }
+  // },
   enter(path) {
     if (path.isArrayExpression()) {
       // console.log('path.node.name', path.getPrevSibling().parent.id.name)
       console.log('path.node.name', path.parent.id.name)
-      let field = t.objectExpression([
-        t.objectProperty(t.identifier('path'), t.stringLiteral('abc')),
-        t.objectProperty(t.identifier('component'), t.identifier('HH')),
-      ])
-      path.node.elements.push(field)
-      // path.node.elements.push(t.stringLiteral('a'))
+      if (path?.parent?.id?.name === 'routes') {
+        let field = t.objectExpression([
+          t.objectProperty(t.identifier('path'), t.stringLiteral('abc')),
+          t.objectProperty(t.identifier('component'), t.identifier('HH')),
+        ])
+        path.node.elements.push(field)
+      }
+    } else if (path.node.type === 'Program') {
+      // 需要插入的节点
+      const node = t.importDeclaration(
+        [t.importDefaultSpecifier(t.identifier('A'))],
+        t.stringLiteral('a')
+      )
+      path.node.body.unshift(node)
     }
   },
 })
