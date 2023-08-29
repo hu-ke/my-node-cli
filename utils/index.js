@@ -29,6 +29,21 @@ export const removeDir = (targetUrl) => {
   })
 }
 
+// 新建文件夹
+export const createDir = (targetUrl) => {
+  return fsPromises.mkdir(targetUrl)
+}
+
+// 清空文件夹
+export const clearDir = async(targetUrl) => {
+  let list = await fsPromises.readdir(targetUrl)
+  for (let name of list) {
+    await fsPromises.rm(name, {
+      recursive: true
+    })
+  }
+}
+
 // 判断文件夹是否存在
 export const isFolderExists = (targetUrl) => {
   return fs.existsSync(targetUrl)
@@ -42,20 +57,21 @@ export const printLogo = () => {
 }
 
 // 生成模板代码
-export const generateProjFiles = async(targetFileOrFolderUrl, outputDirUrl, fileOrFolderName) => {
+export const generateProjFiles = async(targetFileOrFolderUrl, outputDirUrl) => {
   // 是文件夹
   if ((await fsPromises.stat(targetFileOrFolderUrl)).isDirectory()) {
-    // 在输出目录下创建文件夹
-    await fsPromises.mkdir(path.join(outputDirUrl, fileOrFolderName))
     // 将目标文件夹下的文件/文件夹 写到 输出目录
     let list = await fsPromises.readdir(targetFileOrFolderUrl)
     for (let name of list) {
-      generateProjFiles(path.join(targetFileOrFolderUrl, name), path.join(outputDirUrl, fileOrFolderName), name)
+      if ((await fsPromises.stat(path.join(targetFileOrFolderUrl, name))).isDirectory()) {
+        await createDir(path.join(outputDirUrl, name))
+      }
+      generateProjFiles(path.join(targetFileOrFolderUrl, name), path.join(outputDirUrl, name))
     }
   } else {
     // 普通文件，直接写
     let result = await fsPromises.readFile(targetFileOrFolderUrl, 'utf-8')
-    fsPromises.writeFile(path.join(outputDirUrl, fileOrFolderName), result)
+    fsPromises.writeFile(outputDirUrl, result)
   }
 }
 

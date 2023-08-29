@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 import { input, confirm } from '@inquirer/prompts'; // inquirer命令行询问用户问题，记录回答结果
-import {printLogo, writePackageJson, generateProjFiles, isFolderExists, removeDir, addPage, isEmptyDir} from './utils/index.js'
+import {printLogo, writePackageJson, generateProjFiles, isFolderExists, removeDir, addPage, isEmptyDir, createDir, clearDir} from './utils/index.js'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url';
 import { red, lightCyan, green } from 'kolorist'
@@ -34,7 +34,7 @@ program
         // 模板路径
         const targetFileOrFolderUrl = path.join(__dirname, 'templates', 'wisepick-fe')
          // 输出脚手架路径
-        let outputDirUrl = path.join(process.cwd())
+        let outputDirUrl = process.cwd()
         // 是否该继续
         let shouldContinue = true
         // 输入 '.'
@@ -49,11 +49,9 @@ program
                     return
                 }
             }
-            await removeDir(process.cwd())
-            const paths = process.cwd().split(path.sep)
-            const targetName = paths.pop()
+            await clearDir(process.cwd())
             // 生成脚手架
-            await generateProjFiles(targetFileOrFolderUrl, paths.join(path.sep), targetName)
+            await generateProjFiles(targetFileOrFolderUrl, process.cwd())
             return
         }
         let alreadyExists = isFolderExists(path.join(process.cwd(), name))
@@ -76,8 +74,9 @@ program
         if (alreadyExists) {
             await removeDir(path.join(process.cwd(), name))
         }
+        await createDir(path.join(outputDirUrl, answers.name))
         // 生成脚手架
-        await generateProjFiles(targetFileOrFolderUrl, outputDirUrl, answers.name)
+        await generateProjFiles(targetFileOrFolderUrl, path.join(outputDirUrl, answers.name))
         // 生成脚手架的package.json文件
         const packageJsonUrl = path.join(process.cwd(), answers.name, 'package.json')
         await writePackageJson(
