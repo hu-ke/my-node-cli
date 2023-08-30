@@ -32,7 +32,7 @@ program
     .description('create a new project')
     .action(async name => {
         // 模板路径
-        const targetFileOrFolderUrl = path.join(__dirname, 'templates', 'wisepick-fe')
+        const targetFileOrFolderUrl = path.join(__dirname, 'templates', 'scaffold-app')
          // 输出脚手架路径
         let outputDirUrl = process.cwd()
         // 是否该继续
@@ -52,6 +52,16 @@ program
             await clearDir(process.cwd())
             // 生成脚手架
             await generateProjFiles(targetFileOrFolderUrl, process.cwd())
+            // 生成脚手架的package.json文件
+            const packageJsonUrl = path.join(process.cwd(), 'package.json')
+            await writePackageJson(
+                packageJsonUrl,
+                {
+                    name: process.cwd().split(path.sep).pop(),
+                    description: await input({ message: '请输入项目描述（Please enter project description）：'})
+                }
+            )
+            console.log(green(`工程创建成功.`))
             return
         }
         let alreadyExists = isFolderExists(path.join(process.cwd(), name))
